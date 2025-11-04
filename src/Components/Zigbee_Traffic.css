@@ -1,0 +1,448 @@
+/* Container */
+.zigbee-traffic-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: 40px 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Header */
+.header {
+  text-align: center;
+  margin-bottom: 50px;
+}
+
+.header h1 {
+  font-size: 2.5rem;
+  color: #2c3e50;
+  margin-bottom: 10px;
+  font-weight: 700;
+}
+
+.header p {
+  font-size: 1.2rem;
+  color: #7f8c8d;
+  font-weight: 400;
+}
+
+/* Lanes Grid */
+.lanes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 30px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* Lane Card Base */
+.lane-card {
+  background: white;
+  border-radius: 20px;
+  padding: 40px 30px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+  text-align: center;
+}
+
+.lane-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  transition: height 0.3s ease;
+}
+
+.lane-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+}
+
+.lane-card:hover::before {
+  height: 100%;
+  opacity: 0.1;
+}
+
+/* Lane Colors */
+.lane-blue::before {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.lane-green::before {
+  background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
+}
+
+.lane-orange::before {
+  background: linear-gradient(135deg, #f2994a 0%, #f2c94c 100%);
+}
+
+.lane-purple::before {
+  background: linear-gradient(135deg, #c94b4b 0%, #4b134f 100%);
+}
+
+/* Lane Icon */
+.lane-icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.lane-blue .lane-icon {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.lane-green .lane-icon {
+  background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
+  color: white;
+}
+
+.lane-orange .lane-icon {
+  background: linear-gradient(135deg, #f2994a 0%, #f2c94c 100%);
+  color: white;
+}
+
+.lane-purple .lane-icon {
+  background: linear-gradient(135deg, #c94b4b 0%, #4b134f 100%);
+  color: white;
+}
+
+.lane-icon svg {
+  width: 40px;
+  height: 40px;
+}
+
+/* Lane Title */
+.lane-card h2 {
+  font-size: 1.8rem;
+  margin-bottom: 15px;
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+/* Lane Number */
+.lane-number {
+  font-size: 3rem;
+  font-weight: 700;
+  opacity: 0.2;
+  margin-top: 10px;
+}
+
+.lane-blue .lane-number {
+  color: #667eea;
+}
+
+.lane-green .lane-number {
+  color: #56ab2f;
+}
+
+.lane-orange .lane-number {
+  color: #f2994a;
+}
+
+.lane-purple .lane-number {
+  color: #c94b4b;
+}
+
+/* Active State */
+.lane-card.active {
+  transform: scale(1.05);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+}
+
+.lane-card.active::before {
+  height: 100%;
+  opacity: 0.15;
+}
+
+.lane-card.active .lane-icon {
+  transform: scale(1.1);
+  animation: pulse 2s infinite;
+}
+
+/* Active Badge */
+.active-badge {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: #27ae60;
+  color: white;
+  padding: 5px 15px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  animation: fadeIn 0.3s ease;
+}
+
+/* Status Bar */
+.status-bar {
+  max-width: 1200px;
+  margin: 50px auto 0;
+  padding: 30px;
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.status-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.status-label {
+  font-size: 1rem;
+  color: #7f8c8d;
+  font-weight: 500;
+}
+
+.status-value {
+  font-size: 1.5rem;
+  color: #2c3e50;
+  font-weight: 700;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 10px;
+  min-width: 80px;
+  text-align: center;
+}
+
+/* Graph Section */
+.graph-section {
+  max-width: 1400px;
+  margin: 50px auto;
+  padding: 0 20px;
+}
+
+.graph-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.graph-header h2 {
+  font-size: 2rem;
+  color: #2c3e50;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+.graph-header p {
+  font-size: 1.1rem;
+  color: #7f8c8d;
+}
+
+.graph-container {
+  background: white;
+  padding: 40px 30px;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  margin-bottom: 30px;
+  overflow: hidden;
+}
+
+.graph-container .recharts-wrapper {
+  margin: 0 auto;
+}
+
+.graph-container .recharts-surface {
+  overflow: visible;
+}
+
+/* Enhance grid appearance */
+.graph-container .recharts-cartesian-grid-horizontal line,
+.graph-container .recharts-cartesian-grid-vertical line {
+  stroke: #e8e8e8;
+  stroke-width: 1;
+}
+
+/* Enhance axis labels */
+.graph-container .recharts-xAxis .recharts-text,
+.graph-container .recharts-yAxis .recharts-text {
+  fill: #666;
+  font-size: 12px;
+}
+
+/* Legend styling */
+.graph-container .recharts-legend-wrapper {
+  padding-top: 20px !important;
+}
+
+.graph-container .recharts-legend-item-text {
+  color: #2c3e50 !important;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+/* History Section */
+.history-section {
+  background: white;
+  padding: 30px;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.history-section h3 {
+  font-size: 1.5rem;
+  color: #2c3e50;
+  margin-bottom: 20px;
+  font-weight: 600;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.history-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  border-radius: 10px;
+  background: #f8f9fa;
+  transition: all 0.3s ease;
+}
+
+.history-item:hover {
+  transform: translateX(5px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.history-item.lane-1 {
+  border-left: 5px solid #667eea;
+}
+
+.history-item.lane-2 {
+  border-left: 5px solid #56ab2f;
+}
+
+.history-item.lane-3 {
+  border-left: 5px solid #f2994a;
+}
+
+.history-item.lane-4 {
+  border-left: 5px solid #c94b4b;
+}
+
+.history-lane {
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 1.1rem;
+}
+
+.history-time {
+  color: #7f8c8d;
+  font-size: 0.9rem;
+}
+
+/* Animations */
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1.1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .header h1 {
+    font-size: 2rem;
+  }
+
+  .header p {
+    font-size: 1rem;
+  }
+
+  .lanes-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+  }
+
+  .lane-card {
+    padding: 30px 20px;
+  }
+
+  .lane-icon {
+    width: 60px;
+    height: 60px;
+  }
+
+  .lane-icon svg {
+    width: 30px;
+    height: 30px;
+  }
+
+  .lane-card h2 {
+    font-size: 1.5rem;
+  }
+
+  .lane-number {
+    font-size: 2.5rem;
+  }
+
+  .status-bar {
+    flex-direction: column;
+  }
+
+  .graph-container {
+    padding: 15px;
+  }
+
+  .graph-header h2 {
+    font-size: 1.5rem;
+  }
+
+  .history-section {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .zigbee-traffic-container {
+    padding: 20px 10px;
+  }
+
+  .lanes-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .graph-container {
+    padding: 10px;
+  }
+
+  .history-item {
+    flex-direction: column;
+    gap: 5px;
+    text-align: center;
+  }
+}
