@@ -41,6 +41,27 @@ function Dashboard() {
   const fingerprintResetTimer = useRef(null);
   const [detectedData, setDetectedData] = useState(null);
 
+  // Function to update message based on fingerprint and health values
+  const updateMessage = (fingerValue) => {
+    const today = new Date();
+    const dateStr = `${String(today.getDate()).padStart(2, '0')}-${String(today.getMonth() + 1).padStart(2, '0')}-${today.getFullYear()}`;
+    const basePath = `1_Health_${dateStr}`;
+    
+    if (fingerValue === '0') {
+      // When finger is 0, clear the message
+      set(ref(database, `${basePath}/1_Sensor_Data_Shankar/7_Message`), '');
+    } else if (fingerValue === '1') {
+      // When finger is 1, set message based on health values
+      if (!alertedValues.current.hr && !alertedValues.current.spo2 && !alertedValues.current.bp) {
+        // All values are normal
+        set(ref(database, `${basePath}/1_Sensor_Data_Shankar/7_Message`), 'All values are normal');
+      } else {
+        // Some values are abnormal
+        set(ref(database, `${basePath}/1_Sensor_Data_Shankar/7_Message`), 'Patient Alert! take Tablet');
+      }
+    }
+  };
+
   useEffect(() => {
     if (!currentUser) {
       navigate('/login');
@@ -56,12 +77,13 @@ function Dashboard() {
     const unsubscribe = onValue(sensorRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
+        const fingerValue = data['6_Finger'] || '0';
         const newData = {
           hr: data['1_HR'] || '0',
           spo2: data['2_SPO2'] || '0',
-          bp: data['3_BP'] || '120/80',
-          finger: data['6_Finger'] || '0',
-          message: data['7_Message'] || 'HELLO'
+          bp: data['3_BP'] || '0',
+          finger: fingerValue,
+          message: fingerValue === '0' ? '' : (data['7_Message'] || '')
         };
         
         // Save previous data to history if values have changed
@@ -90,7 +112,8 @@ function Dashboard() {
         // Check heart rate
         const hr = parseInt(newData.hr);
         if (hr > 0 && (hr < 60 || hr > 100) && !alertedValues.current.hr) {
-          toast.error(`⚠️ Alert: Heart Rate is ${hr} BPM (Normal: 60-100 BPM)`, {
+          const hrStatus = hr < 60 ? 'TOO LOW' : 'TOO HIGH';
+          toast.error(`⚠️ Alert: Heart Rate is ${hrStatus} - ${hr} BPM (Normal: 60-100 BPM)`, {
             position: "top-right",
             autoClose: 5000,
             hideProgressBar: false,
@@ -99,19 +122,21 @@ function Dashboard() {
             draggable: true
           });
           // Send Telegram alert
-          const alertMessage = `⚠️ <b>Heart Rate Alert!</b>\n\n👤 Patient: ${currentUser.email}\n💓 Heart Rate: ${hr} BPM\n📊 Normal Range: 60-100 BPM\n⏰ Time: ${new Date().toLocaleString('en-US')}\n\n⚠️ Please check patient immediately!`;
+          const alertMessage = `⚠️ <b>Heart Rate Alert - ${hrStatus}!</b>\n\n👤 Patient: ${currentUser.email}\n💓 Heart Rate: ${hr} BPM (${hrStatus})\n📊 Normal Range: 60-100 BPM\n⏰ Time: ${new Date().toLocaleString('en-US')}\n\n⚠️ Please check patient immediately!`;
           sendTelegramAlert(alertMessage);
-          // Update message in Firebase
-          set(ref(database, `${basePath}/1_Sensor_Data_Shankar/7_Message`), 'Patient Alert! take Tablet');
           alertedValues.current.hr = true;
+          // Update message based on fingerprint
+          updateMessage(newData.finger);
         } else if (hr >= 60 && hr <= 100) {
           alertedValues.current.hr = false;
+          // Update message based on fingerprint
+          updateMessage(newData.finger);
         }
         
         // Check oxygen level
         const spo2 = parseInt(newData.spo2);
         if (spo2 > 0 && spo2 < 95 && !alertedValues.current.spo2) {
-          toast.error(`⚠️ Alert: Oxygen Level is ${spo2}% (Normal: 95-100%)`, {
+          toast.error(`⚠️ Alert: Oxygen Level is TOO LOW - ${spo2}% (Normal: 95-100%)`, {
             position: "top-right",
             autoClose: 5000,
             hideProgressBar: false,
@@ -120,13 +145,15 @@ function Dashboard() {
             draggable: true
           });
           // Send Telegram alert
-          const alertMessage = `⚠️ <b>Oxygen Level Alert!</b>\n\n👤 Patient: ${currentUser.email}\n🫁 SpO2: ${spo2}%\n📊 Normal Range: 95-100%\n⏰ Time: ${new Date().toLocaleString('en-US')}\n\n⚠️ Please check patient immediately!`;
+          const alertMessage = `⚠️ <b>Oxygen Level Alert - TOO LOW!</b>\n\n👤 Patient: ${currentUser.email}\n🫁 SpO2: ${spo2}% (TOO LOW)\n📊 Normal Range: 95-100%\n⏰ Time: ${new Date().toLocaleString('en-US')}\n\n⚠️ Please check patient immediately!`;
           sendTelegramAlert(alertMessage);
-          // Update message in Firebase
-          set(ref(database, `${basePath}/1_Sensor_Data_Shankar/7_Message`), 'Patient Alert! take Tablet');
           alertedValues.current.spo2 = true;
+          // Update message based on fingerprint
+          updateMessage(newData.finger);
         } else if (spo2 >= 95) {
           alertedValues.current.spo2 = false;
+          // Update message based on fingerprint
+          updateMessage(newData.finger);
         }
         
         // Check blood pressure
@@ -135,7 +162,13 @@ function Dashboard() {
           const systolic = parseInt(bpParts[0]);
           const diastolic = parseInt(bpParts[1]);
           if ((systolic > 140 || systolic < 90 || diastolic > 90 || diastolic < 60) && !alertedValues.current.bp) {
-            toast.error(`⚠️ Alert: Blood Pressure is ${newData.bp} mmHg (Normal: 120/80 mmHg)`, {
+            let bpStatus = '';
+            if (systolic > 140 || diastolic > 90) {
+              bpStatus = 'TOO HIGH';
+            } else if (systolic < 90 || diastolic < 60) {
+              bpStatus = 'TOO LOW';
+            }
+            toast.error(`⚠️ Alert: Blood Pressure is ${bpStatus} - ${newData.bp} mmHg (Normal: 120/80 mmHg)`, {
               position: "top-right",
               autoClose: 5000,
               hideProgressBar: false,
@@ -144,45 +177,52 @@ function Dashboard() {
               draggable: true
             });
             // Send Telegram alert
-            const alertMessage = `⚠️ <b>Blood Pressure Alert!</b>\n\n👤 Patient: ${currentUser.email}\n🩺 BP: ${newData.bp} mmHg\n📊 Normal Range: 120/80 mmHg\n⏰ Time: ${new Date().toLocaleString('en-US')}\n\n⚠️ Please check patient immediately!`;
+            const alertMessage = `⚠️ <b>Blood Pressure Alert - ${bpStatus}!</b>\n\n👤 Patient: ${currentUser.email}\n🩺 BP: ${newData.bp} mmHg (${bpStatus})\n📊 Normal Range: 120/80 mmHg\n⏰ Time: ${new Date().toLocaleString('en-US')}\n\n⚠️ Please check patient immediately!`;
             sendTelegramAlert(alertMessage);
-            // Update message in Firebase
-            set(ref(database, `${basePath}/1_Sensor_Data_Shankar/7_Message`), 'Patient Alert! take Tablet');
             alertedValues.current.bp = true;
+            // Update message based on fingerprint
+            updateMessage(newData.finger);
           } else if (systolic >= 90 && systolic <= 140 && diastolic >= 60 && diastolic <= 90) {
             alertedValues.current.bp = false;
+            // Update message based on fingerprint
+            updateMessage(newData.finger);
           }
         }
         
-        // Check fingerprint sensor
-        if (newData.finger === '1' && previousFinger.current === '0') {
-          // Store the data when fingerprint is detected
-          setDetectedData({
-            hr: newData.hr,
-            spo2: newData.spo2,
-            bp: newData.bp,
-            message: newData.message,
-            timestamp: new Date().toISOString()
-          });
+        // Check fingerprint sensor changes
+        if (newData.finger !== previousFinger.current) {
+          // Update message whenever fingerprint changes
+          updateMessage(newData.finger);
           
-          const alertMessage = `🚨 <b>Finger Pressed Alert!</b>\n\n👤 Patient: ${currentUser.email}\n👆 Fingerprint sensor activated\n💓 HR: ${newData.hr} BPM\n🫁 SpO2: ${newData.spo2}%\n🩺 BP: ${newData.bp} mmHg\n⏰ Time: ${new Date().toLocaleString('en-US')}\n\n⚠️ Immediate attention required!`;
-          sendTelegramAlert(alertMessage);
-          toast.info('🔔 Fingerprint detected! Data captured. Telegram alert sent.', {
-            position: "top-right",
-            autoClose: 4000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true
-          });
-          
-          // Auto-reset fingerprint to 0 after 3 seconds
-          if (fingerprintResetTimer.current) {
-            clearTimeout(fingerprintResetTimer.current);
+          if (newData.finger === '1' && previousFinger.current === '0') {
+            // Store the data when fingerprint is detected
+            setDetectedData({
+              hr: newData.hr,
+              spo2: newData.spo2,
+              bp: newData.bp,
+              message: newData.message,
+              timestamp: new Date().toISOString()
+            });
+            
+            const alertMessage = `🚨 <b>Finger Pressed Alert!</b>\n\n👤 Patient: ${currentUser.email}\n👆 Fingerprint sensor activated\n💓 HR: ${newData.hr} BPM\n🫁 SpO2: ${newData.spo2}%\n🩺 BP: ${newData.bp} mmHg\n⏰ Time: ${new Date().toLocaleString('en-US')}\n\n⚠️ Immediate attention required!`;
+            sendTelegramAlert(alertMessage);
+            toast.info('🔔 Fingerprint detected! Data captured. Telegram alert sent.', {
+              position: "top-right",
+              autoClose: 4000,
+              hideProgressBar: false,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true
+            });
+            
+            // Auto-reset fingerprint to 0 after 3 seconds
+            if (fingerprintResetTimer.current) {
+              clearTimeout(fingerprintResetTimer.current);
+            }
+            fingerprintResetTimer.current = setTimeout(() => {
+              set(ref(database, `${basePath}/1_Sensor_Data_Shankar/6_Finger`), '0');
+            }, 3000);
           }
-          fingerprintResetTimer.current = setTimeout(() => {
-            set(ref(database, `${basePath}/1_Sensor_Data_Shankar/6_Finger`), '0');
-          }, 3000);
         }
         previousFinger.current = newData.finger;
         
